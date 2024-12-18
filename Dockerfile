@@ -1,5 +1,5 @@
 # Importando a imagem oficial do golang
-FROM golang:1.20-alpine
+FROM golang:1.23-alpine
 
 # Definindo o diretório de trabalho dentro do contêiner
 WORKDIR /app

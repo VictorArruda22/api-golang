@@ -15,15 +15,19 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
 
+
   db:
-    image: mysql:8.0
+    image: mysql:8.0.40
     ports:
-      - "3307:3306"
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
+
     volumes:
       - db-data:/var/lib/mysql
+      - ./db:/docker-entrypoint-initdb.d
 
-  volumes:
-    db-data:
+
+volumes:
+  db-data:

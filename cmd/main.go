@@ -1,22 +1,28 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
-	"os"
+
+	"github.com/VictorArruda22/api-golang/internal/application"
+	"github.com/VictorArruda22/api-golang/internal/db"
+	"github.com/VictorArruda22/api-golang/internal/routers"
 )
 
 func main() {
-	port := os.Getenv("APP_PORT")
-	if port == "" {
-		port = "8080" // Porta padrão se APP_PORT não estiver definida
+
+
+	config := db.CreateDBConfig()
+
+	DB, err := db.Connect(config)
+	if err != nil {
+		log.Fatalf("Error connecting to database: %v", err)
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, World!")
-	})
+	defer db.Close(DB)
 
-	log.Printf("Listening on port %s", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	mux := routers.RouterManagement()
+	application.InitApplication(mux)
 }
+
+
+
