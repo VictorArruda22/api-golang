@@ -3,7 +3,6 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"log"
 
 	"github.com/VictorArruda22/api-golang/internal/entities"
 	"github.com/VictorArruda22/api-golang/internal/utils"
@@ -20,7 +19,7 @@ func NewAuthorRepository(db *sql.DB) entities.AuthorRepository {
 
 // Create implements entities.AuthorRepository.
 func (r *authorRepositoryImpl) Create(author entities.Author) ([]entities.Author, error) {
-	result, err := r.db.Exec("INSERT INTO Author (name, nascimento, nascionalidade) VALUES (?, ?, ?)",
+	result, err := r.db.Exec("INSERT INTO Author (name, BirthDate, Nationality) VALUES (?, ?, ?)",
 		author.Name, author.Nascimento, author.Nacionalidade)
 	if err != nil {
 		return nil, handlerError(err)
@@ -35,16 +34,14 @@ func (r *authorRepositoryImpl) Create(author entities.Author) ([]entities.Author
 
 // Delete implements entities.AuthorRepository.
 func (r *authorRepositoryImpl) Delete(id int) error {
-	_, err := r.db.Exec("DELETE FROM author WHERE id = ?", id)
+	_, err := r.db.Exec("DELETE FROM Author WHERE id = ?", id)
 	return handlerError(err)
 }
 
 // GetAll implements entities.AuthorRepository.
 func (r *authorRepositoryImpl) GetAll() ([]entities.Author, error) {
-	log.Println("Repository: GetAll called")
 	rows, err := r.db.Query("SELECT Id, Name, BirthDate, Nationality FROM Author")
 	if err != nil {
-		log.Println("Repository: Error query %v", err)
 		return nil, handlerError(err)
 	}
 	defer rows.Close()
@@ -53,7 +50,6 @@ func (r *authorRepositoryImpl) GetAll() ([]entities.Author, error) {
 	for rows.Next() {
 		var author entities.Author
 		if err := rows.Scan(&author.ID, &author.Name, &author.Nascimento, &author.Nacionalidade); err != nil {
-			log.Println("Error scan")
 			return nil, handlerError(err)
 		}
 		authors = append(authors, author)
@@ -64,19 +60,19 @@ func (r *authorRepositoryImpl) GetAll() ([]entities.Author, error) {
 // GetByID implements entities.AuthorRepository.
 func (r *authorRepositoryImpl) GetByID(id int) ([]entities.Author, error) {
 	var author entities.Author
-	err := r.db.QueryRow("SELECT id, name, nascimento, nacionalidade FROM Author WHERE id = ?", id).
+	err := r.db.QueryRow("SELECT id, name, BirthDate, Nationality FROM Author WHERE id = ?", id).
 		Scan(&author.ID, &author.Name, &author.Nascimento, &author.Nacionalidade)
 	if err != nil {
-		return []entities.Author{author}, handlerError(err)
+		return nil, handlerError(err)
 	}
 	return []entities.Author{author}, nil
 }
 
 // Update implements entities.AuthorRepository.
 func (r *authorRepositoryImpl) Update(author entities.Author) ([]entities.Author, error) {
-	_, err := r.db.Exec("UPDATE Author SET name = ?, nascimento = ?, nacionalidade = ? WHERE id = ?",
-		author.Name, author.Nascimento, author.Nacionalidade)
-	return nil, err
+	_, err := r.db.Exec("UPDATE Author SET name = ?, BirthDate = ?, Nationality = ? WHERE id = ?",
+		author.Name, author.Nascimento, author.Nacionalidade, author.ID)
+	return nil, handlerError(err)
 }
 
 func handlerError(err error) error {
@@ -88,8 +84,6 @@ func handlerError(err error) error {
 				return utils.ErrAuthorRepositoryInvalidID
 			}
 			err = utils.ErrAuthorRepositoryDuplicated
-		case 1452:
-			err = utils.ErrAuthorRepositoryForeignKey
 		case 1054:
 			err = utils.ErrAuthorRepositoryBadField
 		case 1048:
