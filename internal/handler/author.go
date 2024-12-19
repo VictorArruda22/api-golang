@@ -2,7 +2,7 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -22,10 +22,11 @@ func NewAuthorHandler(service *service.AuthorService) *AuthorHandler {
 
 func (h *AuthorHandler) GetAllAuthors() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Handler: GetAll called")
 		authors, err := h.Service.GetAll()
 		if err != nil {
-			utils.ResponseJSON(w, http.StatusInternalServerError, utils.ErrAuthorRepositoryInternalError.Error(), nil)
+			code := http.StatusInternalServerError
+			msg := utils.ErrAuthorRepositoryInternalError.Error()
+			utils.ResponseJSON(w, code, msg, nil)
 			return
 		}
 		utils.ResponseJSON(w, http.StatusOK, "Autores encontrados", authors)
@@ -44,7 +45,12 @@ func (h *AuthorHandler) GetByID() http.HandlerFunc {
 
 		author, err := h.Service.GetByID(id)
 		if err != nil {
-			utils.ResponseJSON(w, http.StatusInternalServerError, utils.ErrAuthorRepositoryInternalError.Error(), nil)
+			code := http.StatusBadRequest
+			msg := err.Error()
+			if errors.Is(err, utils.ErrAuthorRepositoryNotFound) {
+				code = http.StatusNotFound
+			}
+			utils.ResponseJSON(w, code, msg, nil)
 			return
 		}
 		utils.ResponseJSON(w, http.StatusOK, "Autor encontrado", author)
@@ -55,13 +61,20 @@ func (h *AuthorHandler) Create() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var author entities.Author
 		if err := json.NewDecoder(r.Body).Decode(&author); err != nil {
-			utils.ResponseJSON(w, http.StatusBadRequest, utils.ErrAuthorrRepositoryRequest.Error(), nil)
+			utils.ResponseJSON(w, http.StatusBadRequest, utils.ErrAuthorRepositoryRequest.Error(), nil)
 			return
 		}
 
 		createdAuthor, err := h.Service.Create(author)
 		if err != nil {
-			utils.ResponseJSON(w, http.StatusInternalServerError, utils.ErrAuthorRepositoryInternalError.Error(), nil)
+			code := http.StatusBadRequest
+			msg := err.Error()
+			if errors.Is(err, utils.ErrAuthorRepositoryBadField) {
+				code = http.StatusBadRequest
+			} else if errors.Is(err, utils.ErrAuthorRepositoryNullValue) {
+				code = http.StatusBadRequest
+			}
+			utils.ResponseJSON(w, code, msg, nil)
 			return
 		}
 		utils.ResponseJSON(w, http.StatusOK, "Autor criado.", map[string]int{"id": createdAuthor[0].ID})
@@ -70,13 +83,34 @@ func (h *AuthorHandler) Create() http.HandlerFunc {
 
 func (h *AuthorHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var author entities.Author
-		if err := json.NewDecoder(r.Body).Decode(&author); err != nil {
-			utils.ResponseJSON(w, http.StatusBadRequest, utils.ErrAuthorrRepositoryRequest.Error(), nil)
+		idStr := chi.URLParam(r, "id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			utils.ResponseJSON(w, http.StatusBadRequest, utils.ErrAuthorRepositoryInvalidID.Error(), nil)
 			return
 		}
+		var author entities.Author
+		if err := json.NewDecoder(r.Body).Decode(&author); err != nil {
+			utils.ResponseJSON(w, http.StatusBadRequest, utils.ErrAuthorRepositoryRequest.Error(), nil)
+			return
+		}
+
+		author.ID = id
+
 		if _, err := h.Service.Update(author); err != nil {
-			utils.ResponseJSON(w, http.StatusInternalServerError, utils.ErrAuthorRepositoryInternalError.Error(), nil)
+			code := http.StatusBadRequest
+			msg := err.Error()
+			if errors.Is(err, utils.ErrAuthorRepositoryInvalidID) {
+				code = http.StatusNotFound
+			} else if errors.Is(err, utils.ErrAuthorRepositoryRequest) {
+				code = http.StatusBadRequest
+			} else if errors.Is(err, utils.ErrAuthorRepositoryBadField) {
+				code = http.StatusBadRequest
+			} else if errors.Is(err, utils.ErrAuthorRepositoryNotFound) {
+				code = http.StatusNotFound
+			}
+
+			utils.ResponseJSON(w, code, msg, nil)
 			return
 		}
 		utils.ResponseJSON(w, http.StatusOK, "Autor atualizado.", nil)
@@ -93,7 +127,12 @@ func (h *AuthorHandler) Delete() http.HandlerFunc {
 		}
 
 		if err := h.Service.Delete(id); err != nil {
-			utils.ResponseJSON(w, http.StatusInternalServerError, utils.ErrAuthorRepositoryInternalError.Error(), nil)
+			code := http.StatusBadRequest
+			msg := err.Error()
+			if errors.Is(err, utils.ErrAuthorRepositoryNotFound) {
+				code = http.StatusNotFound
+			}
+			utils.ResponseJSON(w, code, msg, nil)
 			return
 		}
 
