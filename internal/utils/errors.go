@@ -7,10 +7,8 @@ var (
 	ErrAuthorRepositoryNotFound = errors.New("repository: author not found")
 	// ErrAuthorRepositoryDuplicated is returned when the Author already exists
 	ErrAuthorRepositoryDuplicated = errors.New("repository: Author already exists")
-	//ErrAuthorRepositoryForeignKey is returned when the foreign key constraint fails
-	ErrAuthorRepositoryForeignKey = errors.New("repository: foreign key constraint fails")
 	//ErrAuthorRepositoryRequest is returned when the Author is wrong
-	ErrAuthorrRepositoryRequest = errors.New("repository: request Author is wrong")
+	ErrAuthorRepositoryRequest = errors.New("repository: request Author is wrong")
 	//ErrAuthorRepositoryInternalError is returned when there is an internal error
 	ErrAuthorRepositoryInternalError = errors.New("repository: internal error")
 	//ErrAuthorRepositoryBadField is returned when the Author has a bad field
