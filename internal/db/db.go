@@ -45,13 +45,24 @@ func Close(db *sql.DB) {
 	}
 }
 
-
 func CreateDBConfig() Config {
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	host := os.Getenv("DB_HOST")
+	name := os.Getenv("DB_NAME")
+
+	// Adicionando logs para depuração
+	log.Printf("Lendo variáveis de ambiente: User=%s, Host=%s, Name=%s", user, host, name)
+
+	// Verifique se as variáveis obrigatórias estão vazias
+	if user == "" || password == "" || host == "" || name == "" {
+		log.Fatal("Uma ou mais variáveis de ambiente não estão definidas corretamente!")
+	}
+
 	return Config{
 		User:     os.Getenv("DB_USER"),
 		Password: os.Getenv("DB_PASSWORD"),
 		Host:     os.Getenv("DB_HOST"),
-		Name:     os.Getenv("DB_DATABASE"),
+		Name:     os.Getenv("DB_NAME"),
 	}
 }
-
