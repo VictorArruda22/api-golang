@@ -1,7 +1,7 @@
 package service
 
 import (
-	"log"
+	"errors"
 
 	"github.com/VictorArruda22/api-golang/internal/entities"
 )
@@ -15,7 +15,6 @@ func NewAuthorService(rp entities.AuthorRepository) *AuthorService {
 }
 
 func (s *AuthorService) GetAll() ([]entities.Author, error) {
-	log.Println("Service: Called")
 	return s.rp.GetAll()
 }
 
@@ -28,9 +27,26 @@ func (s *AuthorService) Create(author entities.Author) ([]entities.Author, error
 }
 
 func (s *AuthorService) Update(author entities.Author) ([]entities.Author, error) {
+	// Verifique se o autor existe
+	existingAuthor, err := s.rp.GetByID(author.ID)
+	if err != nil {
+		return nil, err
+	}
+	if len(existingAuthor) == 0 {
+		return nil, errors.New("autor não encontrado")
+	}
+
 	return s.rp.Update(author)
 }
 
 func (s *AuthorService) Delete(id int) error {
+	// Verifique se o autor existe
+	existingAuthor, err := s.rp.GetByID(id)
+	if err != nil {
+		return err
+	}
+	if len(existingAuthor) == 0 {
+		return errors.New("autor não encontrado")
+	}
 	return s.rp.Delete(id)
 }
