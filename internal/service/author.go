@@ -1,6 +1,10 @@
 package service
 
-import "github.com/VictorArruda22/api-golang/internal/entities"
+import (
+	"log"
+
+	"github.com/VictorArruda22/api-golang/internal/entities"
+)
 
 type AuthorService struct {
 	rp entities.AuthorRepository
@@ -11,6 +15,7 @@ func NewAuthorService(rp entities.AuthorRepository) *AuthorService {
 }
 
 func (s *AuthorService) GetAll() ([]entities.Author, error) {
+	log.Println("Service: Called")
 	return s.rp.GetAll()
 }
 
