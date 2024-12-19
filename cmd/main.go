@@ -5,11 +5,13 @@ import (
 
 	"github.com/VictorArruda22/api-golang/internal/application"
 	"github.com/VictorArruda22/api-golang/internal/db"
+	"github.com/VictorArruda22/api-golang/internal/handler"
+	"github.com/VictorArruda22/api-golang/internal/repository"
 	"github.com/VictorArruda22/api-golang/internal/routers"
+	"github.com/VictorArruda22/api-golang/internal/service"
 )
 
 func main() {
-
 
 	config := db.CreateDBConfig()
 
@@ -20,9 +22,10 @@ func main() {
 
 	defer db.Close(DB)
 
-	mux := routers.RouterManagement()
+	categoryRepository := repository.NewCategoryRepository(DB)
+	categoryService := service.NewCategoryService(categoryRepository)
+	categoryHandler := handler.NewCategoryHandler(categoryService)
+
+	mux := routers.RouterManagement(categoryHandler)
 	application.InitApplication(mux)
 }
-
-
-
