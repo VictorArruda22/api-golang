@@ -100,9 +100,7 @@ func (h *AuthorHandler) Update() http.HandlerFunc {
 		if _, err := h.Service.Update(author); err != nil {
 			code := http.StatusBadRequest
 			msg := err.Error()
-			if errors.Is(err, utils.ErrAuthorRepositoryInvalidID) {
-				code = http.StatusNotFound
-			} else if errors.Is(err, utils.ErrAuthorRepositoryRequest) {
+			if errors.Is(err, utils.ErrAuthorRepositoryRequest) {
 				code = http.StatusBadRequest
 			} else if errors.Is(err, utils.ErrAuthorRepositoryBadField) {
 				code = http.StatusBadRequest
