@@ -45,13 +45,11 @@ func Close(db *sql.DB) {
 	}
 }
 
-
 func CreateDBConfig() Config {
 	return Config{
 		User:     os.Getenv("DB_USER"),
 		Password: os.Getenv("DB_PASSWORD"),
 		Host:     os.Getenv("DB_HOST"),
-		Name:     os.Getenv("DB_DATABASE"),
+		Name:     os.Getenv("DB_NAME"),
 	}
 }
-
