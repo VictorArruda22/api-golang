@@ -18,7 +18,7 @@ type Config struct {
 }
 
 func Connect(config Config) (*sql.DB, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?allowPublicKeyRetrieval=true&tls=false", config.User, config.Password, config.Host, config.Name)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?tls=false", config.User, config.Password, config.Host, config.Name)
 	var db *sql.DB
 	var err error
 
