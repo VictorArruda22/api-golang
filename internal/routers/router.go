@@ -5,7 +5,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func RouterManagement(authorHandler handler.AuthorHandler) *chi.Mux {
+func RouterAuthorManagement(authorHandler handler.AuthorHandler) *chi.Mux {
 
 	router := chi.NewRouter()
 
