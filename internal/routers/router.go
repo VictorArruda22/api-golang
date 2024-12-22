@@ -8,7 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func RouterManagement(categoryHandler handler.CategoryHandler) *chi.Mux {
+func RouterManagement(categoryHandler *handler.CategoryHandler) *chi.Mux {
 
 	router := chi.NewRouter()
 
@@ -16,7 +16,11 @@ func RouterManagement(categoryHandler handler.CategoryHandler) *chi.Mux {
 		fmt.Fprintf(w, "Hello, World!")
 	}))
 
-	router.Post("/category", categoryHandler.CreateCategory())
+	router.Post("/category", categoryHandler.Create())
+	router.Delete("/category/{id}", categoryHandler.Delete())
+	router.Get("/category/{id}", categoryHandler.GetByID())
+	router.Get("/category", categoryHandler.GetAll())
+	router.Put("/category/{id}", categoryHandler.Update())
 
 	return router
 
