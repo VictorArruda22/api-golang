@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -23,12 +24,12 @@ func (c *CategoryHandler) Create() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var newCategory dto.CategoryRequestDTO
 		if err := json.NewDecoder(r.Body).Decode(&newCategory); err != nil {
-			http.Error(w, "Erro ao deserializar o JSON", http.StatusBadRequest)
+			utils.ErrorResponse(w, utils.ErrCategoryRepositoryRequest.Error(), http.StatusUnprocessableEntity)
 			return
 		}
 		categoryResponseDTO, err := c.sv.Create(newCategory)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			utils.ErrorResponse(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -41,12 +42,16 @@ func (c *CategoryHandler) Delete() http.HandlerFunc {
 		idStr := chi.URLParam(r, "id")
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			utils.ErrorResponse(w, utils.ErrCategoryRepositoryInvalidID.Error(), http.StatusBadRequest)
 			return
 		}
 		err = c.sv.Delete(id)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if err != nil && errors.Is(err, utils.ErrCategoryRepositoryNotFound) {
+			utils.ErrorResponse(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		if err != nil && errors.Is(err, utils.ErrCategoryRepositoryInternalError) {
+			utils.ErrorResponse(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -59,13 +64,17 @@ func (c *CategoryHandler) GetByID() http.HandlerFunc {
 		idStr := chi.URLParam(r, "id")
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			utils.ErrorResponse(w, utils.ErrCategoryRepositoryInvalidID.Error(), http.StatusBadRequest)
 			return
 		}
 
 		categoryResponseDTO, err := c.sv.GetByID(id)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if err != nil && errors.Is(err, utils.ErrCategoryRepositoryNotFound) {
+			utils.ErrorResponse(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		if err != nil && errors.Is(err, utils.ErrCategoryRepositoryInternalError) {
+			utils.ErrorResponse(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -78,7 +87,7 @@ func (c *CategoryHandler) GetAll() http.HandlerFunc {
 		var categories []dto.CategoryResponseDTO
 		categories, err := c.sv.GetAll()
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			utils.ErrorResponse(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -91,18 +100,22 @@ func (c *CategoryHandler) Update() http.HandlerFunc {
 		idStr := chi.URLParam(r, "id")
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			utils.ErrorResponse(w, utils.ErrCategoryRepositoryInvalidID.Error(), http.StatusBadRequest)
 			return
 		}
 		var categoryUpdated dto.CategoryRequestDTO
 		if err := json.NewDecoder(r.Body).Decode(&categoryUpdated); err != nil {
-			http.Error(w, "Erro ao deserializar o JSON", http.StatusBadRequest)
+			utils.ErrorResponse(w, utils.ErrCategoryRepositoryRequest.Error(), http.StatusUnprocessableEntity)
 			return
 		}
 
 		categoryUpdatedResponseDTO, err := c.sv.Update(id, categoryUpdated)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if err != nil && errors.Is(err, utils.ErrCategoryRepositoryNotFound) {
+			utils.ErrorResponse(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		if err != nil && errors.Is(err, utils.ErrCategoryRepositoryInternalError) {
+			utils.ErrorResponse(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 

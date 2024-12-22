@@ -2,9 +2,9 @@ package repository
 
 import (
 	"database/sql"
-	"errors"
 
 	"github.com/VictorArruda22/api-golang/internal/entities"
+	"github.com/VictorArruda22/api-golang/internal/utils"
 )
 
 type CategoryRepository struct {
@@ -22,11 +22,11 @@ func (r *CategoryRepository) Create(categoryAdd entities.Category) (int, error) 
 
 	result, err := r.db.Exec(sqlStatement, categoryAdd.Name, categoryAdd.Description)
 	if err != nil {
-		return 0, err
+		return 0, utils.ErrCategoryRepositoryInternalError
 	}
 	newID, err := result.LastInsertId()
 	if err != nil {
-		return 0, errors.New("Erro ao buscar último ID inserido")
+		return 0, utils.ErrCategoryRepositoryInternalError
 	}
 	newIDiNT := int(newID)
 	return newIDiNT, nil
@@ -39,16 +39,16 @@ func (r *CategoryRepository) Delete(id int) error {
 
 	result, err := r.db.Exec(sqlStatement, id)
 	if err != nil {
-		return err
+		return utils.ErrCategoryRepositoryInternalError
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return err
+		return utils.ErrCategoryRepositoryInternalError
 	}
 
 	if rowsAffected == 0 {
-		return errors.New("categoria nâo encontrada")
+		return utils.ErrCategoryRepositoryNotFound
 	}
 
 	return nil
@@ -62,9 +62,9 @@ func (r *CategoryRepository) GetByID(id int) (entities.Category, error) {
 	err := r.db.QueryRow(sqlStatement, id).Scan(&categorySearched.ID, &categorySearched.Name, &categorySearched.Description)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return entities.Category{}, errors.New("categoria não encontrada")
+			return entities.Category{}, utils.ErrCategoryRepositoryNotFound
 		}
-		return entities.Category{}, err
+		return entities.Category{}, utils.ErrCategoryRepositoryNotFound
 	}
 
 	return categorySearched, nil
@@ -76,7 +76,7 @@ func (r *CategoryRepository) GetAll() ([]entities.Category, error) {
 
 	rows, err := r.db.Query(sqlStatement)
 	if err != nil {
-		return nil, err
+		return nil, utils.ErrCategoryRepositoryInternalError
 	}
 	defer rows.Close()
 
@@ -85,13 +85,13 @@ func (r *CategoryRepository) GetAll() ([]entities.Category, error) {
 	for rows.Next() {
 		var category entities.Category
 		if err := rows.Scan(&category.ID, &category.Name, &category.Description); err != nil {
-			return nil, err
+			return nil, utils.ErrCategoryRepositoryInternalError
 		}
 		categories = append(categories, category)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, utils.ErrCategoryRepositoryInternalError
 	}
 
 	return categories, nil
@@ -105,7 +105,7 @@ func (r *CategoryRepository) Update(id int, categoryUpdated entities.Category) (
 
 	_, err := r.db.Exec(sqlStatement, categoryUpdated.Name, categoryUpdated.Description, id)
 	if err != nil {
-		return entities.Category{}, err
+		return entities.Category{}, utils.ErrCategoryRepositoryInternalError
 	}
 
 	var updatedCategory entities.Category
@@ -117,9 +117,9 @@ func (r *CategoryRepository) Update(id int, categoryUpdated entities.Category) (
 	err = r.db.QueryRow(selectStatement, id).Scan(&updatedCategory.ID, &updatedCategory.Name, &updatedCategory.Description)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return entities.Category{}, errors.New("categoria não encontrada")
+			return entities.Category{}, utils.ErrCategoryRepositoryNotFound
 		}
-		return entities.Category{}, err
+		return entities.Category{}, utils.ErrCategoryRepositoryInternalError
 	}
 
 	return updatedCategory, nil
